@@ -5,7 +5,7 @@ use winit::{
     window::WindowBuilder,
 };
 
-const FORMAT: Format = Format::Argb8888;
+const FORMAT: Format = Format::Xrgb8888;
 
 fn main() {
     let event_loop = EventLoop::new();
