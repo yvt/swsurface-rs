@@ -58,7 +58,13 @@ impl SurfaceImpl {
             appkit::NSOpenGLContextParameter::NSOpenGLCPSwapInterval,
         );
 
-        // TODO: transparent window
+        if !config.opaque {
+            cgl::CGLSetParameter(
+                gl_context.CGLContextObj() as *mut _,
+                cgl::kCGLCPSurfaceOpacity,
+                &mut 0, // false (not opaque)
+            );
+        }
 
         // Create a texture name
         gl_context.makeCurrentContext();

@@ -27,6 +27,17 @@ pub struct Config {
     pub vsync: bool,
     /// The preferred number of swapchain images.
     pub image_count: usize,
+    /// Specifies whether the surface is opaque or not.
+    ///
+    /// If `false` is specified, the content of the surface is blended over
+    /// those below the window. The alpha values are interpreted as
+    /// pre-multiplied alpha. You also have to specify an appropriate window
+    /// creation option such as `WindowBuilder::with_transparent(true)` and use
+    /// a [pixel format](Format) having an alpha channel for this option to
+    /// work.
+    ///
+    /// Defaults to `true`.
+    pub opaque: bool,
 }
 
 impl Config {
@@ -41,6 +52,7 @@ impl Default for Config {
         Self {
             vsync: true,
             image_count: 2,
+            opaque: true,
         }
     }
 }
