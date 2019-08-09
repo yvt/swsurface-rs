@@ -17,7 +17,6 @@ pub const GL_TEXTURE_MAG_FILTER: GLenum = 0x2800;
 pub const GL_TEXTURE_MIN_FILTER: GLenum = 0x2801;
 pub const GL_LINEAR: GLenum = 0x2601;
 pub const GL_BGRA: GLenum = 0x80E1;
-pub const GL_BGR: GLenum = 0x80E0;
 pub const GL_RGBA: GLenum = 0x1908;
 pub const GL_RGB: GLenum = 0x1907;
 pub const GL_UNSIGNED_BYTE: GLenum = 0x1401;
