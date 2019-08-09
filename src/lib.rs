@@ -30,7 +30,7 @@ pub struct Config {
     /// Specifies whether the surface is opaque or not.
     ///
     /// If `false` is specified, the content of the surface is blended over
-    /// those below the window. The alpha values are interpreted as
+    /// the content below the window. The alpha values are interpreted as
     /// pre-multiplied alpha. You also have to specify an appropriate window
     /// creation option such as `WindowBuilder::with_transparent(true)` and use
     /// a [pixel format](Format) having an alpha channel for this option to
