@@ -18,7 +18,7 @@ met or under very pathologic circumstances that would cause winit to panic.
 ## Unimplemented features
 
  - Almost everything!
- - Support for platforms other than: macOS
+ - Support for platforms other than: macOS, Windows
  - Multi-threaded rendering (`Send`-able `Surface`)
  - Color management - we'll try to stick to sRGB for now
 

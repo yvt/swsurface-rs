@@ -26,10 +26,13 @@ fn main() {
             }
             WindowEvent::RedrawRequested => {
                 redraw(&sw_window);
-                sw_window.window().request_redraw();
             }
             _ => {}
         },
+
+        Event::EventsCleared => {
+            sw_window.window().request_redraw();
+        }
         _ => *control_flow = ControlFlow::Poll,
     });
 }

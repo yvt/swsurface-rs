@@ -200,6 +200,14 @@ impl Drop for SwWindow {
     }
 }
 
+// --------------------------------------------------------------------------
+// Backend implementations
+
+#[cfg(target_os = "windows")]
+mod windows;
+#[cfg(target_os = "windows")]
+use self::windows::SurfaceImpl;
+
 #[cfg(any(target_os = "ios", target_os = "macos"))]
 mod cglffi;
 #[cfg(any(target_os = "ios", target_os = "macos"))]
@@ -209,6 +217,8 @@ mod objcutils;
 mod cgl;
 #[cfg(target_os = "macos")]
 use self::cgl::SurfaceImpl;
+
+// --------------------------------------------------------------------------
 
 /// A software-rendered surface that is implicitly associated with the
 /// underlying window (like `glutin::RawContext`).
