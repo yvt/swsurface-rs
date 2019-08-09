@@ -21,6 +21,7 @@ pub const GL_BGR: GLenum = 0x80E0;
 pub const GL_RGBA: GLenum = 0x1908;
 pub const GL_RGB: GLenum = 0x1907;
 pub const GL_UNSIGNED_BYTE: GLenum = 0x1401;
+pub const GL_UNSIGNED_INT_8_8_8_8_REV: GLenum = 0x8367;
 
 #[link(name = "OpenGL", kind = "framework")]
 extern "C" {

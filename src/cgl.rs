@@ -192,6 +192,6 @@ impl SurfaceImpl {
 fn translate_format(format: Format) -> (gl::GLenum, gl::GLenum, gl::GLenum) {
     match format {
         Format::Argb8888 => (gl::GL_RGBA, gl::GL_BGRA, gl::GL_UNSIGNED_BYTE),
-        Format::Xrgb8888 => (gl::GL_RGB, gl::GL_BGR, gl::GL_UNSIGNED_BYTE),
+        Format::Xrgb8888 => (gl::GL_RGB, gl::GL_BGRA, gl::GL_UNSIGNED_INT_8_8_8_8_REV),
     }
 }
