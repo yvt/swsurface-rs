@@ -12,7 +12,9 @@ fn main() {
         .build(&event_loop)
         .unwrap();
 
-    let sw_window = SwWindow::new(window, &Default::default());
+    let sw_context = swsurface::ContextBuilder::new(&event_loop).build();
+
+    let sw_window = SwWindow::new(window, &sw_context, &Default::default());
 
     // Find the suitable pixel format. Wwe don't want to generate non-opaque
     // pixels, `Xrgb8888` is the ideal choice. `Argb8888` is acceptable too

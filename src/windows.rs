@@ -14,7 +14,7 @@ use winapi::{
 };
 use winit::{platform::windows::WindowExtWindows, window::Window};
 
-use super::{Config, Format, ImageInfo};
+use super::{Config, Format, ImageInfo, NullContextImpl};
 
 #[derive(Debug)]
 pub struct SurfaceImpl {
@@ -24,7 +24,7 @@ pub struct SurfaceImpl {
 }
 
 impl SurfaceImpl {
-    pub unsafe fn new(window: &Window, _config: &Config) -> Self {
+    pub unsafe fn new(window: &Window, _: &NullContextImpl, _config: &Config) -> Self {
         Self {
             hwnd: window.hwnd() as _,
             image: RefCell::new(Box::new([])),

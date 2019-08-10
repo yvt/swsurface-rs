@@ -1,10 +1,19 @@
 //! Wayland/X11 backend
 use std::ops::{Deref, DerefMut};
-use winit::{platform::unix::WindowExtUnix, window::Window};
+use winit::{event_loop::EventLoop, platform::unix::WindowExtUnix, window::Window};
 
 use super::{Config, Format, ImageInfo};
 
 mod wayland;
+
+#[derive(Debug)]
+pub struct ContextImpl {}
+
+impl ContextImpl {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
 
 #[derive(Debug)]
 pub enum SurfaceImpl {
@@ -12,7 +21,7 @@ pub enum SurfaceImpl {
 }
 
 impl SurfaceImpl {
-    pub unsafe fn new(window: &Window, _config: &Config) -> Self {
+    pub unsafe fn new(window: &Window, context: &ContextImpl, _config: &Config) -> Self {
         match (
             window.wayland_display(),
             window.wayland_surface(),

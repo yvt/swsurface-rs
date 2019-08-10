@@ -16,7 +16,7 @@ use std::{
 };
 use winit::{platform::macos::WindowExtMacOS, window::Window};
 
-use super::{cglffi as gl, objcutils::IdRef, Config, Format, ImageInfo};
+use super::{cglffi as gl, objcutils::IdRef, Config, Format, ImageInfo, NullContextImpl};
 
 #[derive(Debug)]
 pub struct SurfaceImpl {
@@ -27,7 +27,7 @@ pub struct SurfaceImpl {
 }
 
 impl SurfaceImpl {
-    pub unsafe fn new(window: &Window, config: &Config) -> Self {
+    pub unsafe fn new(window: &Window, _: &NullContextImpl, config: &Config) -> Self {
         // Create `NSOpenGLPixelFormat`
         let attrs = [
             appkit::NSOpenGLPFAOpenGLProfile as u32,

@@ -16,6 +16,9 @@ fn main() {
     simple_logger::init_with_level(log::Level::Debug).unwrap();
 
     let event_loop = EventLoop::new();
+
+    let sw_context = swsurface::ContextBuilder::new(&event_loop).build();
+
     let window = WindowBuilder::new()
         .with_decorations(false)
         .with_transparent(true)
@@ -27,6 +30,7 @@ fn main() {
 
     let sw_window = SwWindow::new(
         window,
+        &sw_context,
         &swsurface::Config {
             opaque: false,
             ..Default::default()

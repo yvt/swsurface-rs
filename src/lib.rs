@@ -19,7 +19,7 @@
 //!  - Color management - we'll try to stick to sRGB for now
 //!
 use std::ops::{Deref, DerefMut};
-use winit::window::Window;
+use winit::{event_loop::EventLoop, window::Window};
 
 /// Configuration for a [`Surface`].
 #[derive(Debug, Clone, Copy)]
@@ -113,9 +113,9 @@ pub struct SwWindow {
 
 impl SwWindow {
     /// Construct a `SwWindow` by wrapping an existing `Window`.
-    pub fn new(window: Window, config: &Config) -> Self {
+    pub fn new(window: Window, context: &Context, config: &Config) -> Self {
         Self {
-            surface: Some(unsafe { Surface::new(&window, config) }),
+            surface: Some(unsafe { Surface::new(&window, context, config) }),
             window: Some(window),
         }
     }
@@ -209,6 +209,8 @@ impl Drop for SwWindow {
 mod windows;
 #[cfg(target_os = "windows")]
 use self::windows::SurfaceImpl;
+#[cfg(target_os = "windows")]
+type ContextImpl = NullContextImpl;
 
 #[cfg(any(target_os = "ios", target_os = "macos"))]
 mod cglffi;
@@ -219,6 +221,8 @@ mod objcutils;
 mod cgl;
 #[cfg(target_os = "macos")]
 use self::cgl::SurfaceImpl;
+#[cfg(target_os = "macos")]
+type ContextImpl = NullContextImpl;
 
 #[cfg(any(
     target_os = "linux",
@@ -235,7 +239,47 @@ mod unix;
     target_os = "netbsd",
     target_os = "openbsd"
 ))]
-use self::unix::SurfaceImpl;
+use self::unix::{ContextImpl, SurfaceImpl};
+
+// --------------------------------------------------------------------------
+
+#[derive(Debug)]
+pub struct ContextBuilder<'a, T: 'static> {
+    event_loop: &'a EventLoop<T>,
+}
+
+impl<'a, T: 'static> ContextBuilder<'a, T> {
+    /// Construct a `ContextBuilder`.
+    pub fn new(event_loop: &'a EventLoop<T>) -> Self {
+        Self { event_loop }
+    }
+
+    /// Build a `Context`.
+    pub fn build(self) -> Context {
+        Context {
+            inner: ContextImpl::new(),
+        }
+    }
+}
+
+/// The global data for [`Surface`], constructed using [`ContextBuilder`].
+#[derive(Debug)]
+pub struct Context {
+    inner: ContextImpl,
+}
+
+/// For backends that don't require `ContextImpl`, this type is aliased as
+/// `ContextImpl`.
+#[allow(dead_code)]
+#[derive(Debug)]
+struct NullContextImpl;
+
+#[allow(dead_code)]
+impl NullContextImpl {
+    fn new() -> Self {
+        Self {}
+    }
+}
 
 // --------------------------------------------------------------------------
 
@@ -250,9 +294,9 @@ impl Surface {
     /// Construct and attach a surface to the specified window.
     ///
     /// **Unsafety:** The constructed `Surface` must be dropped before `window`.
-    pub unsafe fn new(window: &Window, config: &Config) -> Self {
+    pub unsafe fn new(window: &Window, context: &Context, config: &Config) -> Self {
         Self {
-            inner: SurfaceImpl::new(window, config),
+            inner: SurfaceImpl::new(window, &context.inner, config),
         }
     }
 
