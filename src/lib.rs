@@ -19,7 +19,10 @@
 //!  - Color management - we'll try to stick to sRGB for now
 //!
 use std::ops::{Deref, DerefMut};
-use winit::{event_loop::EventLoop, window::Window};
+use winit::{
+    event_loop::EventLoop,
+    window::{Window, WindowId},
+};
 
 /// Configuration for a [`Surface`].
 #[derive(Debug, Clone, Copy)]
@@ -180,8 +183,8 @@ impl SwWindow {
 
     /// Get the index of the next available swapchain image. Blocks the current
     /// thread.
-    pub fn wait_next_image(&self) -> Option<usize> {
-        self.surface.as_ref().unwrap().wait_next_image()
+    pub fn poll_next_image(&self) -> Option<usize> {
+        self.surface.as_ref().unwrap().poll_next_image()
     }
 
     /// Lock a swapchain image at index `i` to access its contents.
@@ -243,21 +246,40 @@ use self::unix::{ContextImpl, SurfaceImpl};
 
 // --------------------------------------------------------------------------
 
-#[derive(Debug)]
+#[allow(dead_code)]
 pub struct ContextBuilder<'a, T: 'static> {
     event_loop: &'a EventLoop<T>,
+    ready_cb: ReadyCb,
 }
+
+type ReadyCb = Box<dyn Fn(WindowId)>;
 
 impl<'a, T: 'static> ContextBuilder<'a, T> {
     /// Construct a `ContextBuilder`.
     pub fn new(event_loop: &'a EventLoop<T>) -> Self {
-        Self { event_loop }
+        Self {
+            event_loop,
+            ready_cb: Box::new(|_| {}),
+        }
+    }
+
+    /// Specify the function to be called when a swapchain image becomes
+    /// available.
+    pub fn with_ready_cb(self, cb: impl Fn(WindowId) + 'static) -> Self {
+        if ContextImpl::TAKES_READY_CB {
+            Self {
+                ready_cb: Box::new(cb),
+                ..self
+            }
+        } else {
+            self
+        }
     }
 
     /// Build a `Context`.
     pub fn build(self) -> Context {
         Context {
-            inner: ContextImpl::new(),
+            inner: ContextImpl::new(self),
         }
     }
 }
@@ -276,7 +298,9 @@ struct NullContextImpl;
 
 #[allow(dead_code)]
 impl NullContextImpl {
-    fn new() -> Self {
+    const TAKES_READY_CB: bool = false;
+
+    fn new<T: 'static>(_: ContextBuilder<'_, T>) -> Self {
         Self {}
     }
 }
@@ -361,22 +385,29 @@ impl Surface {
         self.inner.does_preserve_image()
     }
 
-    /// Get the index of the next available swapchain image. Blocks the current
-    /// thread.
+    /// Get the index of the next available swapchain image.
     ///
-    /// Returns `None` under (but not limited to) the following circumstances:
+    /// Returns `None` if no image is available. In this case, the function
+    /// specified via [`ContextBuilder::with_ready_cb`] will be called when one
+    /// is ready. If you call `poll_next_image` for multiple times before the
+    /// callback function is called for the next time, and all of the calls to
+    /// `poll_next_image` returns `None`, then the callback function will be
+    /// called only once.
     ///
-    ///  - The window can't accept new images because, for example, it's
-    ///    minimized.
-    ///  - An unspecified timeout elapsed.
+    /// `update_surface` may or may not cancel the deferred call to the
+    /// callback.
     ///
-    pub fn wait_next_image(&self) -> Option<usize> {
-        self.inner.wait_next_image()
+    /// If an image is returned, this method does not remove the image from
+    /// the set of avilable images. For example, if the application calls
+    /// `poll_next_image` repeatedly, it may return the same image index for
+    /// all of the calls.
+    pub fn poll_next_image(&self) -> Option<usize> {
+        self.inner.poll_next_image()
     }
 
     /// Lock a swapchain image at index `i` to access its contents.
     ///
-    /// `i` must be the index of a swapchain image acquired by `wait_next_image`.
+    /// `i` must be the index of a swapchain image acquired by `poll_next_image`.
     ///
     /// Panics if the image is currently locked or not ready to be accessed by
     /// the application.
@@ -386,7 +417,10 @@ impl Surface {
 
     /// Enqueue the presentation of a swapchain image at index `i`.
     ///
-    /// `i` must be the index of a swapchain image acquired by `wait_next_image`.
+    /// This method removes the swapchain image at index `i` from the set of
+    /// available images and enqueues it for presentation.
+    ///
+    /// `i` must be the index of a swapchain image acquired by `poll_next_image`.
     /// The image must not be locked by `lock_image`.
     pub fn present_image(&self, i: usize) {
         self.inner.present_image(i)

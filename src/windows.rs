@@ -64,7 +64,7 @@ impl SurfaceImpl {
         true
     }
 
-    pub fn wait_next_image(&self) -> Option<usize> {
+    pub fn poll_next_image(&self) -> Option<usize> {
         Some(0)
     }
 

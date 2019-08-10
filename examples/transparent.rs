@@ -17,7 +17,12 @@ fn main() {
 
     let event_loop = EventLoop::new();
 
-    let sw_context = swsurface::ContextBuilder::new(&event_loop).build();
+    let event_loop_proxy = event_loop.create_proxy();
+    let sw_context = swsurface::ContextBuilder::new(&event_loop)
+        .with_ready_cb(move |_| {
+            let _ = event_loop_proxy.send_event(());
+        })
+        .build();
 
     let window = WindowBuilder::new()
         .with_decorations(false)
@@ -83,6 +88,9 @@ fn main() {
                 }
                 _ => {}
             },
+            Event::UserEvent(_) => {
+                redraw(&sw_window, &state);
+            }
             _ => {}
         }
     });
@@ -132,7 +140,7 @@ fn randomize_wnd_pos(window: &Window) -> winit::dpi::LogicalPosition {
 }
 
 fn redraw(sw_window: &SwWindow, state: &State<'_>) {
-    if let Some(image_index) = sw_window.wait_next_image() {
+    if let Some(image_index) = sw_window.poll_next_image() {
         paint_image(
             &mut sw_window.lock_image(image_index),
             sw_window.image_info(),

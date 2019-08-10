@@ -34,7 +34,7 @@ impl SurfaceImpl {
         unimplemented!()
     }
 
-    pub fn wait_next_image(&self) -> Option<usize> {
+    pub fn poll_next_image(&self) -> Option<usize> {
         unimplemented!()
     }
 

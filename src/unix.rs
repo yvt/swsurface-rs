@@ -1,8 +1,8 @@
 //! Wayland/X11 backend
 use std::ops::{Deref, DerefMut};
-use winit::{event_loop::EventLoop, platform::unix::WindowExtUnix, window::Window};
+use winit::{platform::unix::WindowExtUnix, window::Window};
 
-use super::{Config, Format, ImageInfo};
+use super::{Config, ContextBuilder, Format, ImageInfo, ReadyCb};
 
 mod wayland;
 
@@ -10,7 +10,9 @@ mod wayland;
 pub struct ContextImpl {}
 
 impl ContextImpl {
-    pub fn new() -> Self {
+    pub const TAKES_READY_CB: bool = true;
+
+    pub fn new<T: 'static>(_: ContextBuilder<'_, T>) -> Self {
         Self {}
     }
 }
@@ -66,9 +68,9 @@ impl SurfaceImpl {
         }
     }
 
-    pub fn wait_next_image(&self) -> Option<usize> {
+    pub fn poll_next_image(&self) -> Option<usize> {
         match self {
-            SurfaceImpl::Wayland(imp) => imp.wait_next_image(),
+            SurfaceImpl::Wayland(imp) => imp.poll_next_image(),
         }
     }
 
