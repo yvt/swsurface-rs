@@ -21,7 +21,7 @@ pub enum SurfaceImpl {
 }
 
 impl SurfaceImpl {
-    pub unsafe fn new(window: &Window, context: &ContextImpl, _config: &Config) -> Self {
+    pub(crate) unsafe fn new(window: &Window, context: &ContextImpl, _config: &Config) -> Self {
         match (
             window.wayland_display(),
             window.wayland_surface(),

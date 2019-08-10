@@ -27,7 +27,7 @@ pub struct SurfaceImpl {
 }
 
 impl SurfaceImpl {
-    pub unsafe fn new(window: &Window, _: &NullContextImpl, config: &Config) -> Self {
+    pub(crate) unsafe fn new(window: &Window, _: &NullContextImpl, config: &Config) -> Self {
         // Create `NSOpenGLPixelFormat`
         let attrs = [
             appkit::NSOpenGLPFAOpenGLProfile as u32,

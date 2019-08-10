@@ -24,7 +24,7 @@ pub struct SurfaceImpl {
 }
 
 impl SurfaceImpl {
-    pub unsafe fn new(window: &Window, _: &NullContextImpl, _config: &Config) -> Self {
+    pub(crate) unsafe fn new(window: &Window, _: &NullContextImpl, _config: &Config) -> Self {
         Self {
             hwnd: window.hwnd() as _,
             image: RefCell::new(Box::new([])),
