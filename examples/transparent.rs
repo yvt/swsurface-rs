@@ -94,10 +94,10 @@ fn is_wnd_partially_escaping(window: &Window) -> bool {
     let wnd_pos = window.outer_position().unwrap();
     let wnd_size = window.outer_size();
 
-    wnd_pos.x < 0.0
-        || wnd_pos.y < 0.0
-        || wnd_pos.x > mon_size.width - wnd_size.width
-        || wnd_pos.y > mon_size.height - wnd_size.height
+    wnd_pos.x < mon_pos.x
+        || wnd_pos.y < mon_pos.y
+        || wnd_pos.x > mon_pos.x + mon_size.width - wnd_size.width
+        || wnd_pos.y > mon_pos.y + mon_size.height - wnd_size.height
 }
 
 fn randomize_wnd_pos(window: &Window) -> winit::dpi::LogicalPosition {
