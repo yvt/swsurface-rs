@@ -13,7 +13,7 @@ const FORMAT: Format = Format::Argb8888;
 const FB_SIZE: [u32; 2] = [250, 150];
 
 fn main() {
-    simple_logger::init().unwrap();
+    simple_logger::init_with_level(log::Level::Debug).unwrap();
 
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new()
