@@ -49,7 +49,7 @@ impl SurfaceImpl {
     }
 
     pub fn supported_formats(&self) -> impl Iterator<Item = Format> + '_ {
-        [Format::Argb8888, Format::Xrgb8888].iter().cloned()
+        [Format::Argb8888].iter().cloned()
     }
 
     pub fn image_info(&self) -> ImageInfo {
@@ -82,9 +82,12 @@ impl SurfaceImpl {
             .try_borrow()
             .expect("the image is currently locked");
 
-        // TODO: support `Argb8888`
-        assert_eq!(image_info.format, Format::Xrgb8888);
+        assert_eq!(image_info.format, Format::Argb8888);
 
+        // The following value works for `Argb8888`.
+        // Although the GDI's documentation says that `BI_RGB` ignores the
+        // alpha channel, it still copies it to the backing store as-is, which
+        // DWM interprets as the alpha channel.
         let bitmap_info_header = BITMAPINFOHEADER {
             biSize: size_of::<BITMAPINFOHEADER>() as _,
             biWidth: image_info.extent[0] as _,

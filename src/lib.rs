@@ -59,12 +59,14 @@ impl Default for Config {
 
 /// Specifies a pixel format.
 ///
-/// A backend may support only a subset of these formats.
+/// A backend may support only a subset of these formats. For each platform,
+/// formats marked with **mandatory** are always supporterd.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Format {
     /// 32-bit ARGB format.
     ///
     ///  - Wayland `argb8888` (`0`) (**mandatory**)
+    ///  - Windows (**mandatory**)
     ///
     Argb8888,
 
