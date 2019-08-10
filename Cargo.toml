@@ -29,6 +29,13 @@ cocoa = "0.18"
 core-foundation = "0.6"
 core-graphics = "0.17"
 
+[target.'cfg(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))'.dependencies.wayland-client]
+version = "0.23.0"
+features = ["dlopen", "eventloop"]
+
+[target.'cfg(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))'.dependencies.x11-dl]
+version = "2.18.3"
+
 [dev-dependencies]
 lazy_static = "1"
 zstd = "0.4.14"

@@ -220,6 +220,23 @@ mod cgl;
 #[cfg(target_os = "macos")]
 use self::cgl::SurfaceImpl;
 
+#[cfg(any(
+    target_os = "linux",
+    target_os = "dragonfly",
+    target_os = "freebsd",
+    target_os = "netbsd",
+    target_os = "openbsd"
+))]
+mod unix;
+#[cfg(any(
+    target_os = "linux",
+    target_os = "dragonfly",
+    target_os = "freebsd",
+    target_os = "netbsd",
+    target_os = "openbsd"
+))]
+use self::unix::SurfaceImpl;
+
 // --------------------------------------------------------------------------
 
 /// A software-rendered surface that is implicitly associated with the
