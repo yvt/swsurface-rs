@@ -1,19 +1,29 @@
 //! Wayland/X11 backend
 use std::ops::{Deref, DerefMut};
-use winit::{platform::unix::WindowExtUnix, window::Window};
+use winit::{
+    platform::unix::{EventLoopExtUnix, WindowExtUnix},
+    window::Window,
+};
 
-use super::{Config, ContextBuilder, Format, ImageInfo, ReadyCb};
+use super::{Config, ContextBuilder, Format, ImageInfo};
 
 mod wayland;
 
 #[derive(Debug)]
-pub struct ContextImpl {}
+pub enum ContextImpl {
+    Wayland(wayland::ContextImpl), // TODO: X11
+}
 
 impl ContextImpl {
     pub const TAKES_READY_CB: bool = true;
 
-    pub fn new<T: 'static>(_: ContextBuilder<'_, T>) -> Self {
-        Self {}
+    pub fn new<T: 'static>(builder: ContextBuilder<'_, T>) -> Self {
+        unsafe {
+            match builder.event_loop.wayland_display() {
+                Some(wl_dpy) => ContextImpl::Wayland(wayland::ContextImpl::new(wl_dpy, builder)),
+                None => unimplemented!(),
+            }
+        }
     }
 }
 
@@ -23,7 +33,7 @@ pub enum SurfaceImpl {
 }
 
 impl SurfaceImpl {
-    pub(crate) unsafe fn new(window: &Window, context: &ContextImpl, _config: &Config) -> Self {
+    pub(crate) unsafe fn new(window: &Window, context: &ContextImpl, config: &Config) -> Self {
         match (
             window.wayland_display(),
             window.wayland_surface(),
@@ -31,7 +41,11 @@ impl SurfaceImpl {
             window.xlib_window(),
         ) {
             (Some(wl_dpy), Some(wl_srf), _, _) => {
-                SurfaceImpl::Wayland(wayland::SurfaceImpl::new(wl_dpy, wl_srf))
+                match context {
+                    ContextImpl::Wayland(context) => SurfaceImpl::Wayland(
+                        wayland::SurfaceImpl::new(wl_dpy, wl_srf, window.id(), context, config),
+                    ),
+                }
             }
             (None, None, Some(x_dpy), Some(x_wnd)) => unimplemented!(),
             _ => unreachable!(),
