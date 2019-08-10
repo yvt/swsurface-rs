@@ -88,7 +88,7 @@ impl SurfaceImpl {
         let bitmap_info_header = BITMAPINFOHEADER {
             biSize: size_of::<BITMAPINFOHEADER>() as _,
             biWidth: image_info.extent[0] as _,
-            biHeight: image_info.extent[1] as _,
+            biHeight: -(image_info.extent[1] as i32),
             biPlanes: 1,
             biBitCount: 32,
             biCompression: BI_RGB,
