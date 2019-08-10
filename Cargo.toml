@@ -31,3 +31,12 @@ core-graphics = "0.17"
 
 [dev-dependencies]
 lazy_static = "1"
+zstd = "0.4.14"
+tar = "0.4.26"
+log = "0.4"
+simple_logger = "1"
+rand = "0.6.5"
+
+[dev-dependencies.image]
+git = "https://github.com/yvt/image.git"
+rev = "6bbe8c679b5bff08eb37ab5409154aa962c82567"
