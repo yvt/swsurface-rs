@@ -13,6 +13,7 @@ keywords = ["graphics"]
 winit = ">= 0.20.0-alpha1, < 0.21"
 owning_ref = "0.4.0"
 log = "0.4"
+lazy_static = "1"
 
 [target.'cfg(any(target_os = "ios", target_os = "macos"))'.dependencies]
 objc = "0.2.6"
@@ -30,15 +31,13 @@ cocoa = "0.18"
 core-foundation = "0.6"
 core-graphics = "0.17"
 
-[target.'cfg(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))'.dependencies.wayland-client]
-version = "0.23.0"
-features = ["dlopen", "eventloop"]
-
-[target.'cfg(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))'.dependencies.x11-dl]
-version = "2.18.3"
+[target.'cfg(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))'.dependencies]
+tokenlock = "0.1.6"
+x11-dl = "2.18.3"
+calloop = "0.4.2"
+wayland-client = { version = "0.23.0", features = ["dlopen", "eventloop"] }
 
 [dev-dependencies]
-lazy_static = "1"
 zstd = "0.4.14"
 tar = "0.4.26"
 simple_logger = "1"
