@@ -12,6 +12,7 @@ keywords = ["graphics"]
 [dependencies]
 winit = ">= 0.20.0-alpha1, < 0.21"
 owning_ref = "0.4.0"
+log = "0.4"
 
 [target.'cfg(any(target_os = "ios", target_os = "macos"))'.dependencies]
 objc = "0.2.6"
@@ -40,7 +41,6 @@ version = "2.18.3"
 lazy_static = "1"
 zstd = "0.4.14"
 tar = "0.4.26"
-log = "0.4"
 simple_logger = "1"
 rand = "0.6.5"
 
