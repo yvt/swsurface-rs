@@ -15,13 +15,23 @@ fn main() {
         .unwrap();
 
     let sw_window = SwWindow::new(window, &Default::default());
-    sw_window.update_surface_to_fit(FORMAT);
+
+    // Find the suitable pixel format. Wwe don't want to generate non-opaque
+    // pixels, `Xrgb8888` is the ideal choice. `Argb8888` is acceptable too
+    // because we can generate valid alpha values.
+    let format = [Format::Xrgb8888, Format::Argb8888]
+        .iter()
+        .cloned()
+        .find(|&fmt1| sw_window.supported_formats().any(|fmt2| fmt1 == fmt2))
+        .unwrap();
+
+    sw_window.update_surface_to_fit(format);
 
     event_loop.run(move |event, _, control_flow| match event {
         Event::WindowEvent { event, .. } => match event {
             WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
             WindowEvent::Resized(_) | WindowEvent::HiDpiFactorChanged(_) => {
-                sw_window.update_surface_to_fit(FORMAT);
+                sw_window.update_surface_to_fit(format);
                 redraw(&sw_window);
             }
             WindowEvent::RedrawRequested => {
