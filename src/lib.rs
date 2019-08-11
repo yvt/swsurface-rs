@@ -411,6 +411,9 @@ impl Surface {
     ///
     /// Panics if the image is currently locked or not ready to be accessed by
     /// the application.
+    ///
+    /// Given an `ImageInfo`, the length is calculated as:
+    /// `extent[1] * stride * 4`.
     pub fn lock_image(&self, i: usize) -> impl Deref<Target = [u8]> + DerefMut + '_ {
         self.inner.lock_image(i)
     }
