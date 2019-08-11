@@ -1,4 +1,5 @@
 use fragile::Fragile;
+use log::trace;
 use owning_ref::OwningRefMut;
 use smithay_client_toolkit::utils::MemPool;
 use std::{
@@ -132,6 +133,8 @@ impl Drop for Image {
         let mem = self.mem.get_mut();
         if let Some(mem) = mem {
             if let Some(wl_buf) = mem.1.take() {
+                trace!("Destroying `wl_buffer` {:?}", wl_buf.as_ref().c_ptr());
+
                 // `wl_buf` could be still in use by the presenter, but there
                 // isn't much we can do. The Wayland connection might not even
                 // exist after this call to `drop`... (Remember that the
@@ -198,6 +201,8 @@ impl SurfaceImpl {
             format,
         };
 
+        trace!("{:?}: New image info = {:?}", self.state.wnd_id, image_info);
+
         let size = image_info.stride * image_info.extent[1] as usize;
 
         // Resize mempools
@@ -217,14 +222,19 @@ impl SurfaceImpl {
                     // Assert that we are using it from the correct thread
                     let state = state.get();
 
+                    trace!("{:?}: Swapchain image {} was released", state.wnd_id, i);
+
                     state.images[i].presenting.set(false);
 
                     // Does the application want to receive a notification?
                     // If so, reset this flag and call the ready callback.
                     if state.enable_ready_cb.replace(false) {
+                        trace!("Calling `ready_cb`");
                         (state.ctx.ready_cb)(state.wnd_id);
                     }
                 };
+
+                trace!("Creating `MemPool`");
 
                 let mem_pool = MemPool::new(&self.state.ctx.wl_shm, on_release)
                     .expect("could not create `wl_shm_pool`");
@@ -232,6 +242,7 @@ impl SurfaceImpl {
                 (mem_pool, None)
             });
 
+            trace!("Resizing `MemPool` to {}", size);
             mem_pool
                 .resize(size)
                 .expect("could not resize the memory-mapped file");
@@ -263,7 +274,25 @@ impl SurfaceImpl {
             .iter()
             .position(|image| image.presenting.get() == false);
 
-        if result.is_none() {
+        if let Some(i) = result {
+            trace!(
+                "{:?}: Swapchain image {} is available",
+                self.state.wnd_id,
+                i
+            );
+        } else {
+            if self.state.enable_ready_cb.get() {
+                trace!(
+                    "{:?}: No swapchain image is available. `ready_cb` is already enabled.",
+                    self.state.wnd_id
+                );
+            } else {
+                trace!(
+                    "{:?}: No swapchain image is available. Enabling `ready_cb`.",
+                    self.state.wnd_id
+                );
+            }
+
             // Enable the ready callback
             self.state.enable_ready_cb.set(true);
         }
@@ -317,6 +346,13 @@ impl SurfaceImpl {
             image_info.extent[1] as i32,
             image_info.stride as i32,
             format,
+        );
+
+        trace!(
+            "{:?}: Presenting swapchain image {} using `wl_buffer` {:?}",
+            self.state.wnd_id,
+            i,
+            buffer.as_ref().c_ptr()
         );
 
         // The previous statement also updates `MemPool`'s flag to indicate

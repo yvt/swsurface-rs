@@ -6,6 +6,8 @@ use winit::{
 };
 
 fn main() {
+    simple_logger::init_with_level(log::Level::Debug).unwrap();
+
     let event_loop = EventLoop::new();
 
     let window = WindowBuilder::new()
@@ -33,27 +35,45 @@ fn main() {
 
     sw_window.update_surface_to_fit(format);
 
+    let mut waiting_next_image = false;
+
     event_loop.run(move |event, _, control_flow| match event {
         Event::WindowEvent { event, .. } => match event {
             WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
             WindowEvent::Resized(_) | WindowEvent::HiDpiFactorChanged(_) => {
                 sw_window.update_surface_to_fit(format);
-                redraw(&sw_window);
+                redraw(&sw_window, &mut waiting_next_image);
             }
             WindowEvent::RedrawRequested => {
-                redraw(&sw_window);
+                redraw(&sw_window, &mut waiting_next_image);
             }
             _ => {}
         },
 
-        Event::UserEvent(_) | Event::EventsCleared => {
+        Event::UserEvent(_) => {
+            waiting_next_image = false;
             sw_window.window().request_redraw();
+        }
+        Event::EventsCleared => {
+            if !waiting_next_image {
+                sw_window.window().request_redraw();
+            }
         }
         _ => *control_flow = ControlFlow::Poll,
     });
 }
 
-fn redraw(sw_window: &SwWindow) {
+fn redraw(sw_window: &SwWindow, waiting_next_image: &mut bool) {
+    if *waiting_next_image {
+        // If we know that no swapchain images are available yet, then
+        // calling `poll_next_image` is pointless (but allowed).
+        //
+        // There's a subtle yet complicated problem arising from `waiting_next_image`
+        // being set from a `UserEvent` handler (not directly frm `ready_cb`),
+        // which I think should be explained here sometime.
+        return;
+    }
+
     if let Some(image_index) = sw_window.poll_next_image() {
         paint_image(
             &mut sw_window.lock_image(image_index),
@@ -61,6 +81,9 @@ fn redraw(sw_window: &SwWindow) {
         );
 
         sw_window.present_image(image_index);
+    } else {
+        // In this case, `ready_cb` will called when the next image is ready
+        *waiting_next_image = true;
     }
 }
 
