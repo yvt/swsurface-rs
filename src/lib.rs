@@ -27,9 +27,16 @@ use winit::{
 /// Configuration for a [`Surface`].
 #[derive(Debug, Clone, Copy)]
 pub struct Config {
+    /// Enable vertical sync.
+    ///
+    /// This flag is merely a hint and may be ignored.
     pub vsync: bool,
-    /// The preferred number of swapchain images.
+
+    /// The preferred number of swapchain images. Must be `>= 1`.
+    ///
+    /// This value is merely a hint and may be ignored.
     pub image_count: usize,
+
     /// Specifies whether the surface is opaque or not.
     ///
     /// If `false` is specified, the content of the surface is blended over
@@ -393,6 +400,9 @@ impl Surface {
     /// callback function is called for the next time, and all of the calls to
     /// `poll_next_image` returns `None`, then the callback function will be
     /// called only once.
+    ///
+    /// The application cannot rely on image unavailability for metering the
+    /// rendering speed even if [`Config::vsync`] is enabled.
     ///
     /// `update_surface` may or may not cancel the deferred call to the
     /// callback.

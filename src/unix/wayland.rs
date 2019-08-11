@@ -276,7 +276,7 @@ impl SurfaceImpl {
 
         if let Some(i) = result {
             trace!(
-                "{:?}: Swapchain image {} is available",
+                "{:?}: Swapchain image {} is available, returning it",
                 self.state.wnd_id,
                 i
             );
