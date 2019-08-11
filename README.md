@@ -17,8 +17,9 @@ met or under very pathologic circumstances that would cause winit to panic.
 
 ## Unimplemented features
 
- - Almost everything!
- - Support for platforms other than: macOS, Windows
+ - Support for platforms other than: macOS, Windows, X11, Wayland
+ - X11: Support for color depths other than 24
+ - X11: Transparency
  - Multi-threaded rendering (`Send`-able `Surface`)
  - Color management - we'll try to stick to sRGB for now
 
