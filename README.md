@@ -17,6 +17,8 @@ met or under very pathologic circumstances that would cause winit to panic.
 
 ## Unimplemented features
 
+ - Partial update - The application can redraw a portion, but `swsurface`
+   always sends entire the windowfor now
  - Support for platforms other than: macOS, Windows, X11, Wayland
  - X11: Support for color depths other than 24
  - X11: Transparency

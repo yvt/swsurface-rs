@@ -362,6 +362,9 @@ impl SurfaceImpl {
 
         // Attach the `wl_buffer` to the `wl_surface`.
         self.state.wl_srf.attach(Some(&buffer), 0, 0);
+        self.state
+            .wl_srf
+            .damage_buffer(0, 0, image_info.extent[0] as _, image_info.extent[1] as _);
         self.state.wl_srf.commit();
 
         if let Some(old_buffer) = buffer_cell.take() {
