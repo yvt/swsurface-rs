@@ -21,6 +21,7 @@ pub const GL_RGBA: GLenum = 0x1908;
 pub const GL_RGB: GLenum = 0x1907;
 pub const GL_UNSIGNED_BYTE: GLenum = 0x1401;
 pub const GL_UNSIGNED_INT_8_8_8_8_REV: GLenum = 0x8367;
+pub const GL_UNPACK_ROW_LENGTH: GLenum = 0x0CF2;
 
 #[link(name = "OpenGL", kind = "framework")]
 extern "C" {
@@ -59,4 +60,5 @@ extern "C" {
     pub fn glGenTextures(n: GLsizei, textures: *mut GLuint);
     pub fn glBindTexture(target: GLenum, texture: GLuint);
     pub fn glTexParameteri(target: GLenum, pname: GLenum, param: GLint);
+    pub fn glPixelStorei(pname: GLenum, param: GLint);
 }

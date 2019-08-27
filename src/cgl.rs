@@ -17,7 +17,8 @@ use std::{
 use winit::{platform::macos::WindowExtMacOS, window::Window};
 
 use super::{
-    buffer::Buffer, cglffi as gl, objcutils::IdRef, Config, Format, ImageInfo, NullContextImpl,
+    align::Align, buffer::Buffer, cglffi as gl, objcutils::IdRef, Config, Format, ImageInfo,
+    NullContextImpl,
 };
 
 #[derive(Debug)]
@@ -26,10 +27,13 @@ pub struct SurfaceImpl {
     gl_tex: gl::GLuint,
     image: RefCell<Buffer>,
     image_info: Cell<ImageInfo>,
+    scanline_align: Align,
 }
 
 impl SurfaceImpl {
     pub(crate) unsafe fn new(window: &Window, _: &NullContextImpl, config: &Config) -> Self {
+        let scanline_align = Align::new(config.scanline_align).unwrap();
+
         // Create `NSOpenGLPixelFormat`
         let attrs = [
             appkit::NSOpenGLPFAOpenGLProfile as u32,
@@ -78,6 +82,7 @@ impl SurfaceImpl {
             gl_tex,
             image: RefCell::new(Buffer::from_size_align(1, config.align).unwrap()),
             image_info: Cell::new(ImageInfo::default()),
+            scanline_align,
         }
     }
 
@@ -86,6 +91,19 @@ impl SurfaceImpl {
         assert_ne!(extent[1], 0);
         assert!(extent[0] <= <i32>::max_value() as u32);
         assert!(extent[1] <= <i32>::max_value() as u32);
+
+        use std::convert::TryInto;
+        let extent_usize: [usize; 2] = [
+            extent[0].try_into().expect("overflow"),
+            extent[1].try_into().expect("overflow"),
+        ];
+
+        let stride = extent_usize[0]
+            .checked_mul(4)
+            .and_then(|x| self.scanline_align.align_up(x))
+            .expect("overflow");
+
+        let size = stride.checked_mul(extent_usize[1]).expect("overflow");
 
         let (ifmt, fmt, ty) = translate_format(format);
 
@@ -104,8 +122,8 @@ impl SurfaceImpl {
                 gl::GL_TEXTURE_2D,
                 0,
                 ifmt,
-                extent[0] as _,
-                extent[1] as _,
+                extent[0] as i32,
+                extent[1] as i32,
                 0,
                 fmt,
                 ty,
@@ -115,17 +133,12 @@ impl SurfaceImpl {
             gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_MAG_FILTER, gl::GL_LINEAR);
             gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_MIN_FILTER, gl::GL_LINEAR);
 
-            let size = Some(4usize)
-                .and_then(|x| x.checked_mul(extent[0] as usize))
-                .and_then(|x| x.checked_mul(extent[1] as usize))
-                .expect("overflow");
-
             image.resize(size);
         }
 
         self.image_info.set(ImageInfo {
             extent,
-            stride: extent[0] as usize * 4,
+            stride,
             format,
         });
     }
@@ -170,6 +183,8 @@ impl SurfaceImpl {
         unsafe {
             gl_context.makeCurrentContext();
             gl::glBindTexture(gl::GL_TEXTURE_2D, self.gl_tex);
+
+            gl::glPixelStorei(gl::GL_UNPACK_ROW_LENGTH, (image_info.stride / 4) as _);
             gl::glTexSubImage2D(
                 gl::GL_TEXTURE_2D,
                 0,
@@ -181,6 +196,7 @@ impl SurfaceImpl {
                 ty,
                 image.as_ptr() as *const _,
             );
+            gl::glPixelStorei(gl::GL_UNPACK_ROW_LENGTH, 0);
 
             gl::glClearColor(0.0, 0.0, 0.0, 0.0);
             gl::glClear(gl::GL_COLOR_BUFFER_BIT);
