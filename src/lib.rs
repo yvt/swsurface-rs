@@ -47,6 +47,14 @@ pub struct Config {
     ///  - This value is merely a hint and may be ignored.
     pub align: usize,
 
+    /// The preferred memory alignment of scanlines in swapchain images.
+    ///
+    ///  - This value must not be zero.
+    ///  - This value must be a power of two.
+    ///  - This value must be equal to or less than `align`.
+    ///  - This value is merely a hint and may be ignored.
+    pub scanline_align: usize,
+
     /// Specifies whether the surface is opaque or not.
     ///
     /// If `false` is specified, the content of the surface is blended over
@@ -73,6 +81,7 @@ impl Default for Config {
             vsync: true,
             image_count: 2,
             align: 128,
+            scanline_align: 128,
             opaque: true,
         }
     }
