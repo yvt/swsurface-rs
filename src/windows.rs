@@ -14,13 +14,14 @@ use winapi::{
 };
 use winit::{platform::windows::WindowExtWindows, window::Window};
 
-use super::{buffer::Buffer, Config, Format, ImageInfo, NullContextImpl};
+use super::{align::Align, buffer::Buffer, Config, Format, ImageInfo, NullContextImpl};
 
 #[derive(Debug)]
 pub struct SurfaceImpl {
     hwnd: HWND,
     image: RefCell<Buffer>,
     image_info: Cell<ImageInfo>,
+    scanline_align: Align,
 }
 
 impl SurfaceImpl {
@@ -29,6 +30,7 @@ impl SurfaceImpl {
             hwnd: window.hwnd() as _,
             image: RefCell::new(Buffer::from_size_align(1, config.align).unwrap()),
             image_info: Cell::new(ImageInfo::default()),
+            scanline_align: Align::new(config.scanline_align).unwrap(),
         }
     }
 
@@ -38,10 +40,25 @@ impl SurfaceImpl {
         assert!(extent[0] <= <i32>::max_value() as u32);
         assert!(extent[1] <= <i32>::max_value() as u32);
 
-        let stride = (extent[0] as usize).checked_mul(4).expect("overflow");
+        use std::convert::TryInto;
+        let extent_usize: [usize; 2] = [
+            extent[0].try_into().expect("overflow"),
+            extent[1].try_into().expect("overflow"),
+        ];
+
+        let stride = extent_usize[0]
+            .checked_mul(4)
+            .and_then(|x| self.scanline_align.align_up(x))
+            .expect("overflow");
+
+        let size = stride.checked_mul(extent_usize[1]).expect("overflow");
+
+        // `stride` is used to derive `BITMAPINFOHEADER::biWidth`, so the derived
+        // value must fit in `c_int`
+        let _stride_pixels: std::os::raw::c_int = (stride / 4).try_into().expect("overflow");
 
         let mut image = self.image.borrow_mut();
-        image.resize(stride.checked_mul(extent[1] as usize).expect("overflow"));
+        image.resize(size);
 
         self.image_info.set(ImageInfo {
             extent,
@@ -92,12 +109,12 @@ impl SurfaceImpl {
         // DWM interprets as the alpha channel.
         let bitmap_info_header = BITMAPINFOHEADER {
             biSize: size_of::<BITMAPINFOHEADER>() as _,
-            biWidth: image_info.extent[0] as _,
+            biWidth: (image_info.stride / 4) as _,
             biHeight: -(image_info.extent[1] as i32),
             biPlanes: 1,
             biBitCount: 32,
             biCompression: BI_RGB,
-            biSizeImage: image.len() as _,
+            biSizeImage: 0,
             biXPelsPerMeter: 0,
             biYPelsPerMeter: 0,
             biClrUsed: 0,
