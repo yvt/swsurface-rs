@@ -194,16 +194,25 @@ impl SurfaceImpl {
             .map(|image| image.mem.try_borrow_mut().expect("some images are locked"))
             .collect();
 
+        let stride = (extent[0] as usize).checked_mul(4).expect("overflow");
+
+        // Check the value range
+        assert!(extent[0] <= <i32>::max_value() as u32);
+        assert!(extent[1] <= <i32>::max_value() as u32);
+        assert!(<i32>::try_from(stride).is_some());
+
         // Calculate a new `ImageInfo`
         let image_info = ImageInfo {
             extent,
-            stride: extent[0] as usize * 4,
+            stride,
             format,
         };
 
         trace!("{:?}: New image info = {:?}", self.state.wnd_id, image_info);
 
-        let size = image_info.stride * image_info.extent[1] as usize;
+        let size = stride
+            .checked_mul(image_info.extent[1] as usize)
+            .expect("overflow");
 
         // Resize mempools
         for (i, mem) in mems.iter_mut().enumerate() {

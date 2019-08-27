@@ -14,7 +14,7 @@ use winapi::{
 };
 use winit::{platform::windows::WindowExtWindows, window::Window};
 
-use super::{Config, Format, ImageInfo, NullContextImpl, buffer::Buffer};
+use super::{buffer::Buffer, Config, Format, ImageInfo, NullContextImpl};
 
 #[derive(Debug)]
 pub struct SurfaceImpl {
@@ -38,12 +38,14 @@ impl SurfaceImpl {
         assert!(extent[0] <= <i32>::max_value() as u32);
         assert!(extent[1] <= <i32>::max_value() as u32);
 
+        let stride = (extent[0] as usize).checked_mul(4).expect("overflow");
+
         let mut image = self.image.borrow_mut();
-        image.resize((extent[0] * extent[1]) as usize * 4);
+        image.resize(stride.checked_mul(extent[1] as usize).expect("overflow"));
 
         self.image_info.set(ImageInfo {
             extent,
-            stride: extent[0] as usize * 4,
+            stride,
             format,
         });
     }

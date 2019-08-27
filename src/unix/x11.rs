@@ -69,8 +69,19 @@ impl SurfaceImpl {
         // TODO: Probably we need this sometime
         let _ = depth;
 
+        let stride = (extent[0] as usize).checked_mul(4).expect("overflow");
+
+        let size = stride
+            .checked_mul(image_info.extent[1] as usize)
+            .expect("overflow");
+
+        // Check the value range
+        assert!(extent[0] <= <i32>::max_value() as u32);
+        assert!(extent[1] <= <i32>::max_value() as u32);
+        assert!(<i32>::try_from(stride).is_some());
+
         let mut image = self.image.borrow_mut();
-        image.resize((extent[0] * extent[1]) as usize * 4);
+        image.resize(size);
 
         self.image_info.set(ImageInfo {
             extent,

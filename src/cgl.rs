@@ -115,7 +115,12 @@ impl SurfaceImpl {
             gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_MAG_FILTER, gl::GL_LINEAR);
             gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_MIN_FILTER, gl::GL_LINEAR);
 
-            image.resize((extent[0] * extent[1]) as usize * 4);
+            let size = Some(4usize)
+                .and_then(|x| x.checked_mul(extent[0] as usize))
+                .and_then(|x| x.checked_mul(extent[1] as usize))
+                .expect("overflow");
+
+            image.resize(size);
         }
 
         self.image_info.set(ImageInfo {
