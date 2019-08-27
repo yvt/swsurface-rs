@@ -16,7 +16,7 @@ use wayland_client::{
 use wayland_sys::{client::WAYLAND_CLIENT_HANDLE, ffi_dispatch};
 use winit::window::WindowId;
 
-use super::super::{Config, ContextBuilder, Format, ImageInfo, ReadyCb};
+use super::super::{align::Align, Config, ContextBuilder, Format, ImageInfo, ReadyCb};
 
 #[derive(Clone)]
 pub struct ContextImpl {
@@ -92,6 +92,7 @@ struct State {
     enable_ready_cb: Cell<bool>,
 
     image_info: Cell<ImageInfo>,
+    scanline_align: Align,
 }
 
 impl fmt::Debug for State {
@@ -158,6 +159,7 @@ impl SurfaceImpl {
         wnd_id: WindowId,
         context: &ContextImpl,
         config: &Config,
+        scanline_align: Align,
     ) -> Self {
         assert_eq!(wl_dpy, context.wl_dpy.as_ref().c_ptr() as _);
 
@@ -178,6 +180,7 @@ impl SurfaceImpl {
                 images: images.into_boxed_slice(),
                 enable_ready_cb: Cell::new(false),
                 image_info: Cell::new(ImageInfo::default()),
+                scanline_align,
             }),
         }
     }
@@ -194,12 +197,23 @@ impl SurfaceImpl {
             .map(|image| image.mem.try_borrow_mut().expect("some images are locked"))
             .collect();
 
-        let stride = (extent[0] as usize).checked_mul(4).expect("overflow");
-
         // Check the value range
         assert!(extent[0] <= <i32>::max_value() as u32);
         assert!(extent[1] <= <i32>::max_value() as u32);
-        assert!(<i32>::try_from(stride).is_some());
+
+        use std::convert::TryInto;
+        let extent_usize: [usize; 2] = [
+            extent[0].try_into().expect("overflow"),
+            extent[1].try_into().expect("overflow"),
+        ];
+
+        let stride = extent_usize[0]
+            .checked_mul(4)
+            .and_then(|x| self.state.scanline_align.align_up(x))
+            .expect("overflow");
+
+        // `stride` must fit in `i32`
+        let _bytes_per_line: i32 = stride.try_into().unwrap();
 
         // Calculate a new `ImageInfo`
         let image_info = ImageInfo {

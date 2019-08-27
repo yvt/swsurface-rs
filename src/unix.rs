@@ -6,7 +6,7 @@ use winit::{
     window::Window,
 };
 
-use super::{Config, ContextBuilder, Format, ImageInfo};
+use super::{align::Align, Config, ContextBuilder, Format, ImageInfo};
 
 mod wayland;
 mod x11;
@@ -38,25 +38,34 @@ pub enum SurfaceImpl {
 
 impl SurfaceImpl {
     pub(crate) unsafe fn new(window: &Window, context: &ContextImpl, config: &Config) -> Self {
+        let scanline_align = Align::new(config.scanline_align).unwrap();
+
         match (
             window.wayland_display(),
             window.wayland_surface(),
             window.xlib_display(),
             window.xlib_window(),
         ) {
-            (Some(wl_dpy), Some(wl_srf), _, _) => {
-                match context {
-                    ContextImpl::Wayland(context) => SurfaceImpl::Wayland(
-                        wayland::SurfaceImpl::new(wl_dpy, wl_srf, window.id(), context, config),
-                    ),
-                    ContextImpl::X11 => panic!("backend mismatch"),
-                }
-            }
+            (Some(wl_dpy), Some(wl_srf), _, _) => match context {
+                ContextImpl::Wayland(context) => SurfaceImpl::Wayland(wayland::SurfaceImpl::new(
+                    wl_dpy,
+                    wl_srf,
+                    window.id(),
+                    context,
+                    config,
+                    scanline_align,
+                )),
+                ContextImpl::X11 => panic!("backend mismatch"),
+            },
             (None, None, Some(x_dpy), Some(x_wnd)) => match context {
                 ContextImpl::Wayland(_) => panic!("backend mismatch"),
-                ContextImpl::X11 => {
-                    SurfaceImpl::X11(x11::SurfaceImpl::new(x_dpy, x_wnd, window.id(), config))
-                }
+                ContextImpl::X11 => SurfaceImpl::X11(x11::SurfaceImpl::new(
+                    x_dpy,
+                    x_wnd,
+                    window.id(),
+                    config,
+                    scanline_align,
+                )),
             },
             _ => unreachable!(),
         }

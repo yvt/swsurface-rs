@@ -9,7 +9,7 @@ use std::{
 use winit::window::WindowId;
 use x11_dl::xlib;
 
-use super::super::{buffer::Buffer, Config, Format, ImageInfo};
+use super::super::{align::Align, buffer::Buffer, Config, Format, ImageInfo};
 
 // TODO: Non-opaque window
 
@@ -24,6 +24,7 @@ pub struct SurfaceImpl {
     x_scrn: *mut xlib::Screen,
     image_info: Cell<ImageInfo>,
     image: RefCell<Buffer>,
+    scanline_align: Align,
 }
 
 impl fmt::Debug for SurfaceImpl {
@@ -38,6 +39,7 @@ impl SurfaceImpl {
         x_wnd: c_ulong,
         _wnd_id: WindowId,
         config: &Config,
+        scanline_align: Align,
     ) -> Self {
         let xlib = &*XLIB;
         let x_dpy = x_dpy as *mut xlib::Display;
@@ -55,12 +57,31 @@ impl SurfaceImpl {
             x_scrn,
             image_info: Cell::new(ImageInfo::default()),
             image: RefCell::new(Buffer::from_size_align(1, config.align).unwrap()),
+            scanline_align,
         }
     }
 
     pub fn update_surface(&self, extent: [u32; 2], format: Format) {
         assert_ne!(extent[0], 0);
         assert_ne!(extent[1], 0);
+        assert!(extent[0] <= <i32>::max_value() as u32);
+        assert!(extent[1] <= <i32>::max_value() as u32);
+
+        use std::convert::TryInto;
+        let extent_usize: [usize; 2] = [
+            extent[0].try_into().expect("overflow"),
+            extent[1].try_into().expect("overflow"),
+        ];
+
+        let stride = extent_usize[0]
+            .checked_mul(4)
+            .and_then(|x| self.scanline_align.align_up(x))
+            .expect("overflow");
+
+        // `stride` must fit in `XImage::bytes_per_line`
+        let _bytes_per_line: i32 = stride.try_into().unwrap();
+
+        let size = stride.checked_mul(extent_usize[1]).expect("overflow");
 
         let depth = unsafe { (self.xlib.XDefaultDepthOfScreen)(self.x_scrn) };
         debug!("DefaultDepthOfScreen = {}", depth);
@@ -68,17 +89,6 @@ impl SurfaceImpl {
 
         // TODO: Probably we need this sometime
         let _ = depth;
-
-        let stride = (extent[0] as usize).checked_mul(4).expect("overflow");
-
-        let size = stride
-            .checked_mul(image_info.extent[1] as usize)
-            .expect("overflow");
-
-        // Check the value range
-        assert!(extent[0] <= <i32>::max_value() as u32);
-        assert!(extent[1] <= <i32>::max_value() as u32);
-        assert!(<i32>::try_from(stride).is_some());
 
         let mut image = self.image.borrow_mut();
         image.resize(size);
