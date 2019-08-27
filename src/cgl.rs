@@ -16,13 +16,15 @@ use std::{
 };
 use winit::{platform::macos::WindowExtMacOS, window::Window};
 
-use super::{cglffi as gl, objcutils::IdRef, Config, Format, ImageInfo, NullContextImpl};
+use super::{
+    buffer::Buffer, cglffi as gl, objcutils::IdRef, Config, Format, ImageInfo, NullContextImpl,
+};
 
 #[derive(Debug)]
 pub struct SurfaceImpl {
     gl_context: IdRef,
     gl_tex: gl::GLuint,
-    image: RefCell<Box<[u8]>>,
+    image: RefCell<Buffer>,
     image_info: Cell<ImageInfo>,
 }
 
@@ -74,7 +76,7 @@ impl SurfaceImpl {
         Self {
             gl_context,
             gl_tex,
-            image: RefCell::new(Box::new([])),
+            image: RefCell::new(Buffer::from_size_align(1, config.align).unwrap()),
             image_info: Cell::new(ImageInfo::default()),
         }
     }
@@ -113,7 +115,7 @@ impl SurfaceImpl {
             gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_MAG_FILTER, gl::GL_LINEAR);
             gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_MIN_FILTER, gl::GL_LINEAR);
 
-            *image = vec![0; (extent[0] * extent[1]) as usize * 4].into_boxed_slice();
+            image.resize((extent[0] * extent[1]) as usize * 4);
         }
 
         self.image_info.set(ImageInfo {

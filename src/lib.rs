@@ -40,6 +40,11 @@ pub struct Config {
     /// This value is merely a hint and may be ignored.
     pub image_count: usize,
 
+    /// The preferred memory alignment of swapchain images.
+    ///
+    /// This value is merely a hint and may be ignored.
+    pub align: usize,
+
     /// Specifies whether the surface is opaque or not.
     ///
     /// If `false` is specified, the content of the surface is blended over
@@ -65,6 +70,7 @@ impl Default for Config {
         Self {
             vsync: true,
             image_count: 2,
+            align: 128,
             opaque: true,
         }
     }
@@ -253,6 +259,8 @@ mod unix;
     target_os = "openbsd"
 ))]
 use self::unix::{ContextImpl, SurfaceImpl};
+
+mod buffer;
 
 // --------------------------------------------------------------------------
 
