@@ -14,20 +14,20 @@ use winapi::{
 };
 use winit::{platform::windows::WindowExtWindows, window::Window};
 
-use super::{Config, Format, ImageInfo, NullContextImpl};
+use super::{Config, Format, ImageInfo, NullContextImpl, buffer::Buffer};
 
 #[derive(Debug)]
 pub struct SurfaceImpl {
     hwnd: HWND,
-    image: RefCell<Box<[u8]>>,
+    image: RefCell<Buffer>,
     image_info: Cell<ImageInfo>,
 }
 
 impl SurfaceImpl {
-    pub(crate) unsafe fn new(window: &Window, _: &NullContextImpl, _config: &Config) -> Self {
+    pub(crate) unsafe fn new(window: &Window, _: &NullContextImpl, config: &Config) -> Self {
         Self {
             hwnd: window.hwnd() as _,
-            image: RefCell::new(Box::new([])),
+            image: RefCell::new(Buffer::from_size_align(1, config.align).unwrap()),
             image_info: Cell::new(ImageInfo::default()),
         }
     }
@@ -39,7 +39,7 @@ impl SurfaceImpl {
         assert!(extent[1] <= <i32>::max_value() as u32);
 
         let mut image = self.image.borrow_mut();
-        *image = vec![0; (extent[0] * extent[1]) as usize * 4].into_boxed_slice();
+        image.resize((extent[0] * extent[1]) as usize * 4);
 
         self.image_info.set(ImageInfo {
             extent,
