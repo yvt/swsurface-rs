@@ -65,9 +65,9 @@ impl SurfaceImpl {
         );
 
         if !config.opaque {
-            cgl::CGLSetParameter(
+            gl::CGLSetParameter(
                 gl_context.CGLContextObj() as *mut _,
-                cgl::kCGLCPSurfaceOpacity,
+                gl::kCGLCPSurfaceOpacity,
                 &mut 0, // false (not opaque)
             );
         }

@@ -23,6 +23,13 @@ pub const GL_UNSIGNED_BYTE: GLenum = 0x1401;
 pub const GL_UNSIGNED_INT_8_8_8_8_REV: GLenum = 0x8367;
 pub const GL_UNPACK_ROW_LENGTH: GLenum = 0x0CF2;
 
+pub type CGLContextObj = *mut c_void;
+pub type CGLContextParameter = c_int;
+pub type CGLError = c_int;
+
+#[allow(non_upper_case_globals)]
+pub const kCGLCPSurfaceOpacity: CGLContextParameter = 236;
+
 #[link(name = "OpenGL", kind = "framework")]
 extern "C" {
     pub fn glClear(mask: GLbitfield);
@@ -61,4 +68,10 @@ extern "C" {
     pub fn glBindTexture(target: GLenum, texture: GLuint);
     pub fn glTexParameteri(target: GLenum, pname: GLenum, param: GLint);
     pub fn glPixelStorei(pname: GLenum, param: GLint);
+
+    pub fn CGLSetParameter(
+        ctx: CGLContextObj,
+        pname: CGLContextParameter,
+        params: &GLint,
+    ) -> CGLError;
 }
