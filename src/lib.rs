@@ -42,7 +42,9 @@ pub struct Config {
 
     /// The preferred memory alignment of swapchain images.
     ///
-    /// This value is merely a hint and may be ignored.
+    ///  - This value must not be zero.
+    ///  - This value must be a power of two.
+    ///  - This value is merely a hint and may be ignored.
     pub align: usize,
 
     /// Specifies whether the surface is opaque or not.
