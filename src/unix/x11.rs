@@ -9,7 +9,7 @@ use std::{
 use winit::window::WindowId;
 use x11_dl::xlib;
 
-use super::super::{Config, Format, ImageInfo};
+use super::super::{buffer::Buffer, Config, Format, ImageInfo};
 
 // TODO: Non-opaque window
 
@@ -23,7 +23,7 @@ pub struct SurfaceImpl {
     x_wnd: c_ulong,
     x_scrn: *mut xlib::Screen,
     image_info: Cell<ImageInfo>,
-    image: RefCell<Box<[u8]>>,
+    image: RefCell<Buffer>,
 }
 
 impl fmt::Debug for SurfaceImpl {
@@ -37,7 +37,7 @@ impl SurfaceImpl {
         x_dpy: *mut c_void,
         x_wnd: c_ulong,
         _wnd_id: WindowId,
-        _config: &Config,
+        config: &Config,
     ) -> Self {
         let xlib = &*XLIB;
         let x_dpy = x_dpy as *mut xlib::Display;
@@ -54,7 +54,7 @@ impl SurfaceImpl {
             x_wnd,
             x_scrn,
             image_info: Cell::new(ImageInfo::default()),
-            image: RefCell::new(Box::new([])),
+            image: RefCell::new(Buffer::from_size_align(1, config.align).unwrap()),
         }
     }
 
@@ -70,7 +70,7 @@ impl SurfaceImpl {
         let _ = depth;
 
         let mut image = self.image.borrow_mut();
-        *image = vec![0; (extent[0] * extent[1]) as usize * 4].into_boxed_slice();
+        image.resize((extent[0] * extent[1]) as usize * 4);
 
         self.image_info.set(ImageInfo {
             extent,
