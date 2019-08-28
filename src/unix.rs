@@ -1,10 +1,7 @@
 //! Wayland/X11 backend
 use either::Either;
 use std::ops::{Deref, DerefMut};
-use winit::{
-    platform::unix::{EventLoopExtUnix, WindowExtUnix},
-    window::Window,
-};
+use winit::{platform::unix::*, window::Window};
 
 use super::{align::Align, Config, ContextBuilder, Format, ImageInfo};
 
