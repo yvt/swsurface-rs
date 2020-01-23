@@ -47,8 +47,4 @@ zstd = "0.4.14"
 tar = "0.4.26"
 simple_logger = "1"
 rand = "0.6.5"
-image = "0.22.1"
-
-[patch.crates-io.image]
-git = "https://github.com/image-rs/image.git"
-rev = "3287608628a77aab035d9c5edebacab162fd63e5"
+image = "0.22.2"
