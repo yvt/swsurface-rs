@@ -381,7 +381,6 @@ impl Surface {
     pub fn update_surface_to_fit(&self, window: &Window, format: Format) {
         let (size_w, size_h) = window
             .inner_size()
-            .to_physical(window.hidpi_factor())
             .into();
 
         self.update_surface([size_w, size_h], format);
