@@ -19,6 +19,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - This `CHANGELOG.md` was added.
 
-[Unreleased]: https://github.com/yvt/swsurface-rs/compare/HEAD...0.1.4
-[0.1.4]: https://github.com/yvt/swsurface-rs/compare/0.1.4...0.1.3
-[0.1.3]: https://github.com/yvt/swsurface-rs/compare/0.1.3...0.1.2
+[Unreleased]: https://github.com/yvt/swsurface-rs/compare/0.1.4...HEAD
+[0.1.4]: https://github.com/yvt/swsurface-rs/compare/0.1.3...0.1.4
+[0.1.3]: https://github.com/yvt/swsurface-rs/compare/0.1.2...0.1.3
