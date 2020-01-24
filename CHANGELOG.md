@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.1.4] - 2020-01-24
+
 - Updated `winit` to 0.20.
 
 ## [0.1.3] - 2020-01-24
@@ -17,5 +19,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - This `CHANGELOG.md` was added.
 
-[Unreleased]: https://github.com/yvt/swsurface-rs/compare/HEAD...0.1.3
+[Unreleased]: https://github.com/yvt/swsurface-rs/compare/HEAD...0.1.4
+[0.1.4]: https://github.com/yvt/swsurface-rs/compare/0.1.4...0.1.3
 [0.1.3]: https://github.com/yvt/swsurface-rs/compare/0.1.3...0.1.2
