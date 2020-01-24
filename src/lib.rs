@@ -379,9 +379,7 @@ impl Surface {
     ///
     /// This internally calls `update_surface`.
     pub fn update_surface_to_fit(&self, window: &Window, format: Format) {
-        let (size_w, size_h) = window
-            .inner_size()
-            .into();
+        let (size_w, size_h) = window.inner_size().into();
 
         self.update_surface([size_w, size_h], format);
     }

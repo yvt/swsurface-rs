@@ -79,7 +79,7 @@ fn main() {
         match event {
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
-                WindowEvent::Resized(_)  => {
+                WindowEvent::Resized(_) => {
                     sw_window.update_surface_to_fit(FORMAT);
                     redraw(&sw_window, &state);
                 }
