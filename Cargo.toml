@@ -13,7 +13,7 @@ keywords = ["graphics"]
 maintenance = { status = "passively-maintained" }
 
 [dependencies]
-winit = ">= 0.20.0-alpha1, < 0.21"
+winit = ">= 0.20.0-alpha1, <= 0.20.0-alpha5"
 owning_ref = "0.4.0"
 log = "0.4"
 lazy_static = "1"
