@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+- Updated `winit` to 0.20.
+
 ## [0.1.3] - 2020-01-24
 
 - Fixed the incorrect version specification for `winit`. This library is (currently) not compatible with `winit >= 0.20.0-alpha6`.
