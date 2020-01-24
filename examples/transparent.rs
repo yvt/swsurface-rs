@@ -27,7 +27,7 @@ fn main() {
     let window = WindowBuilder::new()
         .with_decorations(false)
         .with_transparent(true)
-        .with_inner_size((FB_SIZE[0], FB_SIZE[1]).into())
+        .with_inner_size(winit::dpi::LogicalSize::new(FB_SIZE[0], FB_SIZE[1]))
         .with_resizable(false)
         .with_always_on_top(true)
         .build(&event_loop)
@@ -79,15 +79,18 @@ fn main() {
         match event {
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
-                WindowEvent::Resized(_) | WindowEvent::HiDpiFactorChanged(_) => {
+                WindowEvent::Resized(_) => {
                     sw_window.update_surface_to_fit(FORMAT);
                     redraw(&sw_window, &state);
                 }
-                WindowEvent::RedrawRequested => {
-                    redraw(&sw_window, &state);
-                }
+
                 _ => {}
             },
+            Event::RedrawRequested(id) => {
+                if sw_window.window().id() == id {
+                    redraw(&sw_window, &state)
+                };
+            }
             Event::UserEvent(_) => {
                 redraw(&sw_window, &state);
             }
@@ -99,20 +102,19 @@ fn main() {
 fn is_wnd_partially_escaping(window: &Window) -> bool {
     let monitor = window.current_monitor();
 
-    let dpi = monitor.hidpi_factor();
-    let mon_pos = monitor.position().to_logical(dpi);
-    let mon_size = monitor.size().to_logical(dpi);
+    let mon_pos = monitor.position();
+    let mon_size = monitor.size();
 
     let wnd_pos = window.outer_position().unwrap();
     let wnd_size = window.outer_size();
 
     wnd_pos.x < mon_pos.x
         || wnd_pos.y < mon_pos.y
-        || wnd_pos.x > mon_pos.x + mon_size.width - wnd_size.width
-        || wnd_pos.y > mon_pos.y + mon_size.height - wnd_size.height
+        || wnd_pos.x > mon_pos.x + mon_size.width as i32 - wnd_size.width as i32
+        || wnd_pos.y > mon_pos.y + mon_size.height as i32 - wnd_size.height as i32
 }
 
-fn randomize_wnd_pos(window: &Window) -> winit::dpi::LogicalPosition {
+fn randomize_wnd_pos(window: &Window) -> winit::dpi::LogicalPosition<f64> {
     use rand::{seq::SliceRandom, Rng};
     let mut rng = rand::thread_rng();
 
@@ -121,11 +123,11 @@ fn randomize_wnd_pos(window: &Window) -> winit::dpi::LogicalPosition {
         .choose(&mut rng)
         .expect("could not find any monitor");
 
-    let dpi = monitor.hidpi_factor();
-    let mon_pos = monitor.position().to_logical(dpi);
-    let mon_size = monitor.size().to_logical(dpi);
+    let dpi = monitor.scale_factor();
+    let mon_pos = monitor.position().to_logical::<f64>(dpi);
+    let mon_size = monitor.size().to_logical::<f64>(dpi);
 
-    let wnd_size = window.outer_size();
+    let wnd_size = window.outer_size().to_logical::<f64>(dpi);
 
     // `X_MARGIN` should be larger, otherwise the pony will escape too often
     const X_MARGIN: f64 = 200.0;

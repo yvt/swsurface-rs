@@ -40,21 +40,23 @@ fn main() {
     event_loop.run(move |event, _, control_flow| match event {
         Event::WindowEvent { event, .. } => match event {
             WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
-            WindowEvent::Resized(_) | WindowEvent::HiDpiFactorChanged(_) => {
+            WindowEvent::Resized(_) => {
                 sw_window.update_surface_to_fit(format);
-                redraw(&sw_window, &mut waiting_next_image);
-            }
-            WindowEvent::RedrawRequested => {
                 redraw(&sw_window, &mut waiting_next_image);
             }
             _ => {}
         },
+        Event::RedrawRequested(id) => {
+            if sw_window.window().id() == id {
+                redraw(&sw_window, &mut waiting_next_image)
+            };
+        }
 
         Event::UserEvent(_) => {
             waiting_next_image = false;
             sw_window.window().request_redraw();
         }
-        Event::EventsCleared => {
+        Event::MainEventsCleared => {
             if !waiting_next_image {
                 sw_window.window().request_redraw();
             }
